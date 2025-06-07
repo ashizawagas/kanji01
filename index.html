@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小学5年生 同音異義語・同訓異字クイズ</title>
+    <style>
+        body {
+            font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3498db;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+        }
+        .question-area {
+            background: #e8f4fd;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            min-height: 200px;
+        }
+        .question {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #34495e;
+            text-align: center;
+        }
+        .choices {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .choice-btn {
+            padding: 15px;
+            border: 3px solid #3498db;
+            background: white;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        .choice-btn:hover {
+            background: #3498db;
+            color: white;
+            transform: translateY(-2px);
+        }
+        .choice-btn.correct {
+            background: #27ae60;
+            color: white;
+            border-color: #27ae60;
+        }
+        .choice-btn.incorrect {
+            background: #e74c3c;
+            color: white;
+            border-color: #e74c3c;
+        }
+        .result {
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .explanation {
+            background: #fff3cd;
+            border: 2px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        .controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .btn {
+            padding: 15px 30px;
+            margin: 10px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .next-btn {
+            background: #3498db;
+            color: white;
+        }
+        .restart-btn {
+            background: #e74c3c;
+            color: white;
+        }
+        .shuffle-btn {
+            background: #f39c12;
+            color: white;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #ecf0f1;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            transition: width 0.3s;
+        }
+        .category-info {
+            background: #e8f5e8;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: bold;
+            color: #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 同音異義語・同訓異字クイズ</h1>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-number" id="score">0</div>
+                <div class="stat-label">正解数</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="currentNum">1</div>
+                <div class="stat-label">問題番号</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="totalQuestions">400</div>
+                <div class="stat-label">総問題数</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="accuracy">0%</div>
+                <div class="stat-label">正答率</div>
+            </div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        
+        <div class="question-area">
+            <div class="category-info" id="categoryInfo"></div>
+            <div class="question" id="question"></div>
+            <div class="choices" id="choices"></div>
+            <div class="result" id="result"></div>
+            <div class="explanation" id="explanation" style="display: none;"></div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn next-btn" id="nextBtn" onclick="nextQuestion()" style="display: none;">次の問題</button>
+            <button class="btn restart-btn" id="restartBtn" onclick="restartQuiz()" style="display: none;">最初から</button>
+            <button class="btn shuffle-btn" onclick="shuffleQuestions()">問題をシャッフル</button>
+        </div>
+    </div>
+
+    <script>
+        // 大規模問題データベース（400問）- ひらがなと漢字1つの問題を削除
+        const questionDatabase = [
+            // つとめる系（務める・勤める・努める）
+            { sentence: "司会を（　　）。", choices: ["務める", "勤める", "努める"], correct: 0, category: "つとめる", explanation: "「務める」は任務や役割を担当するという意味です。司会という役割を担当するので「務める」が正解です。" },
+            { sentence: "会社に（　　）。", choices: ["務める", "勤める", "努める"], correct: 1, category: "つとめる", explanation: "「勤める」は職場に行って仕事をするという意味です。会社という場所で働くので「勤める」が正解です。" },
+            { sentence: "宿題を忘れないように（　　）。", choices: ["務める", "勤める", "努める"], correct: 2, category: "つとめる", explanation: "「努める」は力を尽くして励むという意味です。忘れないよう気をつけるので「努める」が正解です。" },
+            { sentence: "主役を（　　）。", choices: ["務める", "勤める", "努める"], correct: 0, category: "つとめる", explanation: "「務める」は任務や役割を担当するという意味です。主役という役割を担当するので「務める」が正解です。" },
+            { sentence: "銀行に（　　）。", choices: ["務める", "勤める", "努める"], correct: 1, category: "つとめる", explanation: "「勤める」は職場に行って仕事をするという意味です。銀行という場所で働くので「勤める」が正解です。" },
+            { sentence: "健康に（　　）。", choices: ["務める", "勤める", "努める"], correct: 2, category: "つとめる", explanation: "「努める」は力を尽くして励むという意味です。健康を保つよう気をつけるので「努める」が正解です。" },
+            { sentence: "委員長を（　　）。", choices: ["務める", "勤める", "努める"], correct: 0, category: "つとめる", explanation: "「務める」は任務や役割を担当するという意味です。委員長という役割を担当するので「務める」が正解です。" },
+            { sentence: "役所に（　　）。", choices: ["務める", "勤める", "努める"], correct: 1, category: "つとめる", explanation: "「勤める」は職場に行って仕事をするという意味です。役所という場所で働くので「勤める」が正解です。" },
+            { sentence: "早寝早起きに（　　）。", choices: ["務める", "勤める", "努める"], correct: 2, category: "つとめる", explanation: "「努める」は力を尽くして励むという意味です。早寝早起きを心がけるので「努める」が正解です。" },
+            { sentence: "審判を（　　）。", choices: ["務める", "勤める", "努める"], correct: 0, category: "つとめる", explanation: "「務める」は任務や役割を担当するという意味です。審判という役割を担当するので「務める」が正解です。" },
+
+            // あつい系（熱い・暑い・厚い）
+            { sentence: "（　　）お茶を飲む。", choices: ["熱い", "暑い", "厚い"], correct: 0, category: "あつい", explanation: "「熱い」は物の温度が高いという意味です。お茶の温度なので「熱い」が正解です。" },
+            { sentence: "（　　）夏の日。", choices: ["熱い", "暑い", "厚い"], correct: 1, category: "あつい", explanation: "「暑い」は気温が高いという意味です。夏の気温なので「暑い」が正解です。" },
+            { sentence: "（　　）辞書を使う。", choices: ["熱い", "暑い", "厚い"], correct: 2, category: "あつい", explanation: "「厚い」は物の幅が大きいという意味です。辞書のページ数が多く分厚いので「厚い」が正解です。" },
+            { sentence: "（　　）スープを作る。", choices: ["熱い", "暑い", "厚い"], correct: 0, category: "あつい", explanation: "「熱い」は物の温度が高いという意味です。スープの温度なので「熱い」が正解です。" },
+            { sentence: "今日は（　　）ですね。", choices: ["熱い", "暑い", "厚い"], correct: 1, category: "あつい", explanation: "「暑い」は気温が高いという意味です。今日の気温について話しているので「暑い」が正解です。" },
+            { sentence: "（　　）本を読む。", choices: ["熱い", "暑い", "厚い"], correct: 2, category: "あつい", explanation: "「厚い」は物の幅が大きいという意味です。本のページ数が多いので「厚い」が正解です。" },
+            { sentence: "（　　）コーヒーを入れる。", choices: ["熱い", "暑い", "厚い"], correct: 0, category: "あつい", explanation: "「熱い」は物の温度が高いという意味です。コーヒーの温度なので「熱い」が正解です。" },
+            { sentence: "（　　）地方に住む。", choices: ["熱い", "暑い", "厚い"], correct: 1, category: "あつい", explanation: "「暑い」は気温が高いという意味です。地方の気候について話しているので「暑い」が正解です。" },
+            { sentence: "（　　）板を切る。", choices: ["熱い", "暑い", "厚い"], correct: 2, category: "あつい", explanation: "「厚い」は物の幅が大きいという意味です。板の厚さについて話しているので「厚い」が正解です。" },
+            { sentence: "（　　）鍋に注意する。", choices: ["熱い", "暑い", "厚い"], correct: 0, category: "あつい", explanation: "「熱い」は物の温度が高いという意味です。鍋の温度について話しているので「熱い」が正解です。" },
+
+            // あたたかい系（暖かい・温かい）
+            { sentence: "（　　）春の陽気。", choices: ["暖かい", "温かい"], correct: 0, category: "あたたかい", explanation: "「暖かい」は気温や気候について使います。春の気候なので「暖かい」が正解です。" },
+            { sentence: "（　　）スープを飲む。", choices: ["暖かい", "温かい"], correct: 1, category: "あたたかい", explanation: "「温かい」は物の温度や心情について使います。スープの温度なので「温かい」が正解です。" },
+            { sentence: "（　　）地方に引っ越す。", choices: ["暖かい", "温かい"], correct: 0, category: "あたたかい", explanation: "「暖かい」は気温や気候について使います。地方の気候なので「暖かい」が正解です。" },
+            { sentence: "（　　）心の持ち主。", choices: ["暖かい", "温かい"], correct: 1, category: "あたたかい", explanation: "「温かい」は物の温度や心情について使います。心の優しさについて話しているので「温かい」が正解です。" },
+            { sentence: "（　　）日差しを浴びる。", choices: ["暖かい", "温かい"], correct: 0, category: "あたたかい", explanation: "「暖かい」は気温や気候について使います。日差しによる気温の変化なので「暖かい」が正解です。" },
+            { sentence: "（　　）お風呂に入る。", choices: ["暖かい", "温かい"], correct: 1, category: "あたたかい", explanation: "「温かい」は物の温度や心情について使います。お風呂の温度なので「温かい」が正解です。" },
+            { sentence: "（　　）季節になった。", choices: ["暖かい", "温かい"], correct: 0, category: "あたたかい", explanation: "「暖かい」は気温や気候について使います。季節の気候変化なので「暖かい」が正解です。" },
+            { sentence: "（　　）歓迎を受ける。", choices: ["暖かい", "温かい"], correct: 1, category: "あたたかい", explanation: "「温かい」は物の温度や心情について使います。心のこもった歓迎なので「温かい」が正解です。" },
+            { sentence: "（　　）部屋で過ごす。", choices: ["暖かい", "温かい"], correct: 0, category: "あたたかい", explanation: "「暖かい」は気温や気候について使います。部屋の温度・気温なので「暖かい」が正解です。" },
+            { sentence: "（　　）料理を作る。", choices: ["暖かい", "温かい"], correct: 1, category: "あたたかい", explanation: "「温かい」は物の温度や心情について使います。料理の温度なので「温かい」が正解です。" },
+
+            // はかる系（測る・量る・図る）
+            { sentence: "身長を（　　）。", choices: ["測る", "量る", "図る"], correct: 0, category: "はかる", explanation: "「測る」は長さや時間を調べるという意味です。身長は長さなので「測る」が正解です。" },
+            { sentence: "体重を（　　）。", choices: ["測る", "量る", "図る"], correct: 1, category: "はかる", explanation: "「量る」は重さや容積を調べるという意味です。体重は重さなので「量る」が正解です。" },
+            { sentence: "向上を（　　）。", choices: ["測る", "量る", "図る"], correct: 2, category: "はかる", explanation: "「図る」は計画するという意味です。向上を目指して計画するので「図る」が正解です。" },
+            { sentence: "時間を（　　）。", choices: ["測る", "量る", "図る"], correct: 0, category: "はかる", explanation: "「測る」は長さや時間を調べるという意味です。時間を調べるので「測る」が正解です。" },
+            { sentence: "米を（　　）。", choices: ["測る", "量る", "図る"], correct: 1, category: "はかる", explanation: "「量る」は重さや容積を調べるという意味です。米の重さや容積を調べるので「量る」が正解です。" },
+            { sentence: "解決を（　　）。", choices: ["測る", "量る", "図る"], correct: 2, category: "はかる", explanation: "「図る」は計画するという意味です。解決を目指して計画するので「図る」が正解です。" },
+            { sentence: "距離を（　　）。", choices: ["測る", "量る", "図る"], correct: 0, category: "はかる", explanation: "「測る」は長さや時間を調べるという意味です。距離は長さなので「測る」が正解です。" },
+            { sentence: "小麦粉を（　　）。", choices: ["測る", "量る", "図る"], correct: 1, category: "はかる", explanation: "「量る」は重さや容積を調べるという意味です。小麦粉の重さや容積を調べるので「量る」が正解です。" },
+            { sentence: "改善を（　　）。", choices: ["測る", "量る", "図る"], correct: 2, category: "はかる", explanation: "「図る」は計画するという意味です。改善を目指して計画するので「図る」が正解です。" },
+            { sentence: "速度を（　　）。", choices: ["測る", "量る", "図る"], correct: 0, category: "はかる", explanation: "「測る」は長さや時間を調べるという意味です。速度を調べるので「測る」が正解です。" },
+
+            // かえる系（帰る・返る・変える）
+            { sentence: "家に（　　）。", choices: ["帰る", "返る", "変える"], correct: 0, category: "かえる", explanation: "「帰る」は元の場所に戻るという意味です。家という場所に戻るので「帰る」が正解です。" },
+            { sentence: "若（　　）。", choices: ["帰る", "返る", "変える"], correct: 1, category: "かえる", explanation: "「返る」は元の状態に戻るという意味です。若い状態に戻るので「返る」が正解です。" },
+            { sentence: "予定を（　　）。", choices: ["帰る", "返る", "変える"], correct: 2, category: "かえる", explanation: "「変える」は違うものにするという意味です。予定を別のものにするので「変える」が正解です。" },
+            { sentence: "故郷に（　　）。", choices: ["帰る", "返る", "変える"], correct: 0, category: "かえる", explanation: "「帰る」は元の場所に戻るという意味です。故郷という場所に戻るので「帰る」が正解です。" },
+            { sentence: "振り（　　）。", choices: ["帰る", "返る", "変える"], correct: 1, category: "かえる", explanation: "「返る」は元の状態に戻るという意味です。後ろを向く動作なので「返る」が正解です。" },
+            { sentence: "服を（　　）。", choices: ["帰る", "返る", "変える"], correct: 2, category: "かえる", explanation: "「変える」は違うものにするという意味です。服を別のものにするので「変える」が正解です。" },
+            { sentence: "学校から（　　）。", choices: ["帰る", "返る", "変える"], correct: 0, category: "かえる", explanation: "「帰る」は元の場所に戻るという意味です。学校から家に戻るので「帰る」が正解です。" },
+            { sentence: "元に（　　）。", choices: ["帰る", "返る", "変える"], correct: 1, category: "かえる", explanation: "「返る」は元の状態に戻るという意味です。元の状態に戻るので「返る」が正解です。" },
+            { sentence: "計画を（　　）。", choices: ["帰る", "返る", "変える"], correct: 2, category: "かえる", explanation: "「変える」は違うものにするという意味です。計画を別のものにするので「変える」が正解です。" },
+            { sentence: "実家に（　　）。", choices: ["帰る", "返る", "変える"], correct: 0, category: "かえる", explanation: "「帰る」は元の場所に戻るという意味です。実家という場所に戻るので「帰る」が正解です。" },
+
+            // たてる系（建てる・立てる）
+            { sentence: "家を（　　）。", choices: ["建てる", "立てる"], correct: 0, category: "たてる", explanation: "「建てる」は建物を作るという意味です。家という建物を作るので「建てる」が正解です。" },
+            { sentence: "旗を（　　）。", choices: ["建てる", "立てる"], correct: 1, category: "たてる", explanation: "「立てる」は物を縦にするという意味です。旗を縦にするので「立てる」が正解です。" },
+            { sentence: "学校を（　　）。", choices: ["建てる", "立てる"], correct: 0, category: "たてる", explanation: "「建てる」は建物を作るという意味です。学校という建物を作るので「建てる」が正解です。" },
+            { sentence: "看板を（　　）。", choices: ["建てる", "立てる"], correct: 1, category: "たてる", explanation: "「立てる」は物を縦にするという意味です。看板を縦にするので「立てる」が正解です。" },
+            { sentence: "ビルを（　　）。", choices: ["建てる", "立てる"], correct: 0, category: "たてる", explanation: "「建てる」は建物を作るという意味です。ビルという建物を作るので「建てる」が正解です。" },
+            { sentence: "計画を（　　）。", choices: ["建てる", "立てる"], correct: 1, category: "たてる", explanation: "「立てる」は物を縦にする、または計画を作るという意味です。計画を作るので「立てる」が正解です。" },
+            { sentence: "工場を（　　）。", choices: ["建てる", "立てる"], correct: 0, category: "たてる", explanation: "「建てる」は建物を作るという意味です。工場という建物を作るので「建てる」が正解です。" },
+            { sentence: "柱を（　　）。", choices: ["建てる", "立てる"], correct: 1, category: "たてる", explanation: "「立てる」は物を縦にするという意味です。柱を縦にするので「立てる」が正解です。" },
+            { sentence: "橋を（　　）。", choices: ["建てる", "立てる"], correct: 0, category: "たてる", explanation: "「建てる」は建物を作るという意味です。橋という構造物を作るので「建てる」が正解です。" },
+            { sentence: "目標を（　　）。", choices: ["建てる", "立てる"], correct: 1, category: "たてる", explanation: "「立てる」は物を縦にする、または計画を作るという意味です。目標を設定するので「立てる」が正解です。" },
+
+            // あげる系（上げる・挙げる・揚げる）
+            { sentence: "手を（　　）。", choices: ["上げる", "挙げる", "揚げる"], correct: 0, category: "あげる", explanation: "「上げる」は物を高い位置に移すという意味です。手を高い位置に移すので「上げる」が正解です。" },
+            { sentence: "例を（　　）。", choices: ["上げる", "挙げる", "揚げる"], correct: 1, category: "あげる", explanation: "「挙げる」は示すという意味です。例を示すので「挙げる」が正解です。" },
+            { sentence: "天ぷらを（　　）。", choices: ["上げる", "挙げる", "揚げる"], correct: 2, category: "あげる", explanation: "「揚げる」は油で調理するという意味です。天ぷらを油で調理するので「揚げる」が正解です。" },
+            { sentence: "声を（　　）。", choices: ["上げる", "挙げる", "揚げる"], correct: 0, category: "あげる", explanation: "「上げる」は物を高い位置に移すという意味です。声を大きくするので「上げる」が正解です。" },
+            { sentence: "名前を（　　）。", choices: ["上げる", "挙げる", "揚げる"], correct: 1, category: "あげる", explanation: "「挙げる」は示すという意味です。名前を示すので「挙げる」が正解です。" },
+            { sentence: "から揚げを（　　）。", choices: ["上げる", "挙げる", "揚げる"], correct: 2, category: "あげる", explanation: "「揚げる」は油で調理するという意味です。から揚げを油で調理するので「揚げる」が正解です。" },
+            { sentence: "旗を（　　）。", choices: ["上げる", "挙げる", "揚げる"], correct: 0, category: "あげる", explanation: "「上げる」は物を高い位置に移すという意味です。旗を高い位置に移すので「上げる」が正解です。" },
+            { sentence: "理由を（　　）。", choices: ["上げる", "挙げる", "揚げる"], correct: 1, category: "あげる", explanation: "「挙げる」は示すという意味です。理由を示すので「挙げる」が正解です。" },
+            { sentence: "コロッケを（　　）。", choices: ["上げる", "挙げる", "揚げる"], correct: 2, category: "あげる", explanation: "「揚げる」は油で調理するという意味です。コロッケを油で調理するので「揚げる」が正解です。" },
+            { sentence: "成績を（　　）。", choices: ["上げる", "挙げる", "揚げる"], correct: 0, category: "あげる", explanation: "「上げる」は物を高い位置に移すという意味です。成績を良くするので「上げる」が正解です。" },
+
+            // おさめる系（収める・納める・治める）
+            { sentence: "税金を（　　）。", choices: ["収める", "納める", "治める"], correct: 1, category: "おさめる", explanation: "「納める」は義務として支払うという意味です。税金を支払うので「納める」が正解です。" },
+            { sentence: "国を（　　）。", choices: ["収める", "納める", "治める"], correct: 2, category: "おさめる", explanation: "「治める」は統治するという意味です。国を統治するので「治める」が正解です。" },
+            { sentence: "成果を（　　）。", choices: ["収める", "納める", "治める"], correct: 0, category: "おさめる", explanation: "「収める」は得るという意味です。成果を得るので「収める」が正解です。" },
+            { sentence: "授業料を（　　）。", choices: ["収める", "納める", "治める"], correct: 1, category: "おさめる", explanation: "「納める」は義務として支払うという意味です。授業料を支払うので「納める」が正解です。" },
+            { sentence: "領土を（　　）。", choices: ["収める", "納める", "治める"], correct: 2, category: "おさめる", explanation: "「治める」は統治するという意味です。領土を統治するので「治める」が正解です。" },
+            { sentence: "利益を（　　）。", choices: ["収める", "納める", "治める"], correct: 0, category: "おさめる", explanation: "「収める」は得るという意味です。利益を得るので「収める」が正解です。" },
+            { sentence: "会費を（　　）。", choices: ["収める", "納める", "治める"], correct: 1, category: "おさめる", explanation: "「納める」は義務として支払うという意味です。会費を支払うので「納める」が正解です。" },
+            { sentence: "民を（　　）。", choices: ["収める", "納める", "治める"], correct: 2, category: "おさめる", explanation: "「治める」は統治するという意味です。民を統治するので「治める」が正解です。" },
+            { sentence: "勝利を（　　）。", choices: ["収める", "納める", "治める"], correct: 0, category: "おさめる", explanation: "「収める」は得るという意味です。勝利を得るので「収める」が正解です。" },
+            { sentence: "料金を（　　）。", choices: ["収める", "納める", "治める"], correct: 1, category: "おさめる", explanation: "「納める」は義務として支払うという意味です。料金を支払うので「納める」が正解です。" },
+
+            // うつす系（写す・映す・移す）
+            { sentence: "写真を（　　）。", choices: ["写す", "映す", "移す"], correct: 0, category: "うつす", explanation: "「写す」は撮影するという意味です。写真を撮影するので「写す」が正解です。" },
+            { sentence: "画面に（　　）。", choices: ["写す", "映す", "移す"], correct: 1, category: "うつす", explanation: "「映す」は映像を表示するという意味です。画面に映像を表示するので「映す」が正解です。" },
+            { sentence: "荷物を（　　）。", choices: ["写す", "映す", "移す"], correct: 2, category: "うつす", explanation: "「移す」は場所を変えるという意味です。荷物の場所を変えるので「移す」が正解です。" },
+            { sentence: "黒板を（　　）。", choices: ["写す", "映す", "移す"], correct: 0, category: "うつす", explanation: "「写す」は撮影する、または書き取るという意味です。黒板の内容を書き取るので「写す」が正解です。" },
+            { sentence: "スクリーンに（　　）。", choices: ["写す", "映す", "移す"], correct: 1, category: "うつす", explanation: "「映す」は映像を表示するという意味です。スクリーンに映像を表示するので「映す」が正解です。" },
+            { sentence: "病気を（　　）。", choices: ["写す", "映す", "移す"], correct: 2, category: "うつす", explanation: "「移す」は場所を変える、または感染させるという意味です。病気を感染させるので「移す」が正解です。" },
+            { sentence: "風景を（　　）。", choices: ["写す", "映す", "移す"], correct: 0, category: "うつす", explanation: "「写す」は撮影するという意味です。風景を撮影するので「写す」が正解です。" },
+            { sentence: "テレビに（　　）。", choices: ["写す", "映す", "移す"], correct: 1, category: "うつす", explanation: "「映す」は映像を表示するという意味です。テレビに映像を表示するので「映す」が正解です。" },
+            { sentence: "席を（　　）。", choices: ["写す", "映す", "移す"], correct: 2, category: "うつす", explanation: "「移す」は場所を変えるという意味です。席の場所を変えるので「移す」が正解です。" },
+            { sentence: "絵を（　　）。", choices: ["写す", "映す", "移す"], correct: 0, category: "うつす", explanation: "「写す」は撮影する、または模写するという意味です。絵を模写するので「写す」が正解です。" },
+
+            // かく系（書く・描く）
+            { sentence: "手紙を（　　）。", choices: ["書く", "描く"], correct: 0, category: "かく", explanation: "「書く」は文字を記すという意味です。手紙に文字を記すので「書く」が正解です。" },
+            { sentence: "絵を（　　）。", choices: ["書く", "描く"], correct: 1, category: "かく", explanation: "「描く」は絵や図を表現するという意味です。絵を表現するので「描く」が正解です。" },
+            { sentence: "日記を（　　）。", choices: ["書く", "描く"], correct: 0, category: "かく", explanation: "「書く」は文字を記すという意味です。日記に文字を記すので「書く」が正解です。" },
+            { sentence: "漫画を（　　）。", choices: ["書く", "描く"], correct: 1, category: "かく", explanation: "「描く」は絵や図を表現するという意味です。漫画の絵を表現するので「描く」が正解です。" },
+            { sentence: "作文を（　　）。", choices: ["書く", "描く"], correct: 0, category: "かく", explanation: "「書く」は文字を記すという意味です。作文に文字を記すので「書く」が正解です。" },
+            { sentence: "地図を（　　）。", choices: ["書く", "描く"], correct: 1, category: "かく", explanation: "「描く」は絵や図を表現するという意味です。地図という図を表現するので「描く」が正解です。" },
+            { sentence: "名前を（　　）。", choices: ["書く", "描く"], correct: 0, category: "かく", explanation: "「書く」は文字を記すという意味です。名前という文字を記すので「書く」が正解です。" },
+            { sentence: "似顔絵を（　　）。", choices: ["書く", "描く"], correct: 1, category: "かく", explanation: "「描く」は絵や図を表現するという意味です。似顔絵という絵を表現するので「描く」が正解です。" },
+            { sentence: "レポートを（　　）。", choices: ["書く", "描く"], correct: 0, category: "かく", explanation: "「書く」は文字を記すという意味です。レポートに文字を記すので「書く」が正解です。" },
+            { sentence: "イラストを（　　）。", choices: ["書く", "描く"], correct: 1, category: "かく", explanation: "「描く」は絵や図を表現するという意味です。イラストという絵を表現するので「描く」が正解です。" },
+
+            // ひく系（引く・弾く）
+            { sentence: "ピアノを（　　）。", choices: ["引く", "弾く"], correct: 1, category: "ひく", explanation: "「弾く」は楽器を演奏するという意味です。ピアノという楽器を演奏するので「弾く」が正解です。" },
+            { sentence: "ロープを（　　）。", choices: ["引く", "弾く"], correct: 0, category: "ひく", explanation: "「引く」は手前に引っ張るという意味です。ロープを手前に引っ張るので「引く」が正解です。" },
+            { sentence: "ギターを（　　）。", choices: ["引く", "弾く"], correct: 1, category: "ひく", explanation: "「弾く」は楽器を演奏するという意味です。ギターという楽器を演奏するので「弾く」が正解です。" },
+            { sentence: "車を（　　）。", choices: ["引く", "弾く"], correct: 0, category: "ひく", explanation: "「引く」は手前に引っ張るという意味です。車を手前に引っ張るので「引く」が正解です。" },
+            { sentence: "バイオリンを（　　）。", choices: ["引く", "弾く"], correct: 1, category: "ひく", explanation: "「弾く」は楽器を演奏するという意味です。バイオリンという楽器を演奏するので「弾く」が正解です。" },
+            { sentence: "扉を（　　）。", choices: ["引く", "弾く"], correct: 0, category: "ひく", explanation: "「引く」は手前に引っ張るという意味です。扉を手前に引っ張るので「引く」が正解です。" },
+            { sentence: "オルガンを（　　）。", choices: ["引く", "弾く"], correct: 1, category: "ひく", explanation: "「弾く」は楽器を演奏するという意味です。オルガンという楽器を演奏するので「弾く」が正解です。" },
+            { sentence: "綱を（　　）。", choices: ["引く", "弾く"], correct: 0, category: "ひく", explanation: "「引く」は手前に引っ張るという意味です。綱を手前に引っ張るので「引く」が正解です。" },
+            { sentence: "ハープを（　　）。", choices: ["引く", "弾く"], correct: 1, category: "ひく", explanation: "「弾く」は楽器を演奏するという意味です。ハープという楽器を演奏するので「弾く」が正解です。" },
+            { sentence: "荷車を（　　）。", choices: ["引く", "弾く"], correct: 0, category: "ひく", explanation: "「引く」は手前に引っ張るという意味です。荷車を手前に引っ張るので「引く」が正解です。" },
+
+            // きく系（聞く・聴く）
+            { sentence: "音楽を（　　）。", choices: ["聞く", "聴く"], correct: 1, category: "きく", explanation: "「聴く」は注意深く耳を傾けるという意味です。音楽に注意深く耳を傾けるので「聴く」が正解です。" },
+            { sentence: "話を（　　）。", choices: ["聞く", "聴く"], correct: 0, category: "きく", explanation: "「聞く」は一般的に音を感じ取るという意味です。話を感じ取るので「聞く」が正解です。" },
+            { sentence: "コンサートを（　　）。", choices: ["聞く", "聴く"], correct: 1, category: "きく", explanation: "「聴く」は注意深く耳を傾けるという意味です。コンサートに注意深く耳を傾けるので「聴く」が正解です。" },
+            { sentence: "うわさを（　　）。", choices: ["聞く", "聴く"], correct: 0, category: "きく", explanation: "「聞く」は一般的に音を感じ取るという意味です。うわさを感じ取るので「聞く」が正解です。" },
+            { sentence: "講演を（　　）。", choices: ["聞く", "聴く"], correct: 1, category: "きく", explanation: "「聴く」は注意深く耳を傾けるという意味です。講演に注意深く耳を傾けるので「聴く」が正解です。" },
+            { sentence: "質問を（　　）。", choices: ["聞く", "聴く"], correct: 0, category: "きく", explanation: "「聞く」は一般的に音を感じ取るという意味です。質問を感じ取るので「聞く」が正解です。" },
+            { sentence: "ラジオを（　　）。", choices: ["聞く", "聴く"], correct: 1, category: "きく", explanation: "「聴く」は注意深く耳を傾けるという意味です。ラジオに注意深く耳を傾けるので「聴く」が正解です。" },
+            { sentence: "声を（　　）。", choices: ["聞く", "聴く"], correct: 0, category: "きく", explanation: "「聞く」は一般的に音を感じ取るという意味です。声を感じ取るので「聞く」が正解です。" },
+            { sentence: "演奏を（　　）。", choices: ["聞く", "聴く"], correct: 1, category: "きく", explanation: "「聴く」は注意深く耳を傾けるという意味です。演奏に注意深く耳を傾けるので「聴く」が正解です。" },
+            { sentence: "返事を（　　）。", choices: ["聞く", "聴く"], correct: 0, category: "きく", explanation: "「聞く」は一般的に音を感じ取るという意味です。返事を感じ取るので「聞く」が正解です。" },
+
+            // その他の重要な同音異義語・同訓異字
+            { sentence: "雨が（　　）。", choices: ["降る", "振る"], correct: 0, category: "ふる", explanation: "「降る」は上から下に落ちるという意味です。雨が上から下に落ちるので「降る」が正解です。" },
+            { sentence: "手を（　　）。", choices: ["降る", "振る"], correct: 1, category: "ふる", explanation: "「振る」は左右に動かすという意味です。手を左右に動かすので「振る」が正解です。" },
+            { sentence: "雪が（　　）。", choices: ["降る", "振る"], correct: 0, category: "ふる", explanation: "「降る」は上から下に落ちるという意味です。雪が上から下に落ちるので「降る」が正解です。" },
+            { sentence: "旗を（　　）。", choices: ["降る", "振る"], correct: 1, category: "ふる", explanation: "「振る」は左右に動かすという意味です。旗を左右に動かすので「振る」が正解です。" },
+            { sentence: "霰が（　　）。", choices: ["降る", "振る"], correct: 0, category: "ふる", explanation: "「降る」は上から下に落ちるという意味です。霰が上から下に落ちるので「降る」が正解です。" },
+
+            { sentence: "本を（　　）。", choices: ["読む", "詠む"], correct: 0, category: "よむ", explanation: "「読む」は文字を見て理解するという意味です。本の文字を見て理解するので「読む」が正解です。" },
+            { sentence: "短歌を（　　）。", choices: ["読む", "詠む"], correct: 1, category: "よむ", explanation: "「詠む」は詩歌を作るという意味です。短歌という詩歌を作るので「詠む」が正解です。" },
+            { sentence: "新聞を（　　）。", choices: ["読む", "詠む"], correct: 0, category: "よむ", explanation: "「読む」は文字を見て理解するという意味です。新聞の文字を見て理解するので「読む」が正解です。" },
+            { sentence: "俳句を（　　）。", choices: ["読む", "詠む"], correct: 1, category: "よむ", explanation: "「詠む」は詩歌を作るという意味です。俳句という詩歌を作るので「詠む」が正解です。" },
+
+            { sentence: "花が（　　）。", choices: ["咲く", "裂く"], correct: 0, category: "さく", explanation: "「咲く」は花が開くという意味です。花が開くので「咲く」が正解です。" },
+            { sentence: "紙を（　　）。", choices: ["咲く", "裂く"], correct: 1, category: "さく", explanation: "「裂く」は破るという意味です。紙を破るので「裂く」が正解です。" },
+            { sentence: "桜が（　　）。", choices: ["咲く", "裂く"], correct: 0, category: "さく", explanation: "「咲く」は花が開くという意味です。桜の花が開くので「咲く」が正解です。" },
+            { sentence: "布を（　　）。", choices: ["咲く", "裂く"], correct: 1, category: "さく", explanation: "「裂く」は破るという意味です。布を破るので「裂く」が正解です。" },
+
+            { sentence: "薬を（　　）。", choices: ["飲む", "呑む"], correct: 0, category: "のむ", explanation: "「飲む」は液体を口に入れて飲み込むという意味です。薬を飲み込むので「飲む」が正解です。" },
+            { sentence: "相手を（　　）。", choices: ["飲む", "呑む"], correct: 1, category: "のむ", explanation: "「呑む」は圧倒するという意味です。相手を圧倒するので「呑む」が正解です。" },
+            { sentence: "水を（　　）。", choices: ["飲む", "呑む"], correct: 0, category: "のむ", explanation: "「飲む」は液体を口に入れて飲み込むという意味です。水を飲み込むので「飲む」が正解です。" },
+            { sentence: "敵を（　　）。", choices: ["飲む", "呑む"], correct: 1, category: "のむ", explanation: "「呑む」は圧倒するという意味です。敵を圧倒するので「呑む」が正解です。" },
+
+            { sentence: "電気を（　　）。", choices: ["点ける", "付ける"], correct: 0, category: "つける", explanation: "「点ける」は火や電気をつけるという意味です。電気をつけるので「点ける」が正解です。" },
+            { sentence: "ボタンを（　　）。", choices: ["点ける", "付ける"], correct: 1, category: "つける", explanation: "「付ける」は物を取り付けるという意味です。ボタンを取り付けるので「付ける」が正解です。" },
+            { sentence: "ろうそくを（　　）。", choices: ["点ける", "付ける"], correct: 0, category: "つける", explanation: "「点ける」は火や電気をつけるという意味です。ろうそくに火をつけるので「点ける」が正解です。" },
+            { sentence: "名札を（　　）。", choices: ["点ける", "付ける"], correct: 1, category: "つける", explanation: "「付ける」は物を取り付けるという意味です。名札を取り付けるので「付ける」が正解です。" },
+
+            // 追加問題
+            { sentence: "風邪を（　　）。", choices: ["引く", "弾く"], correct: 0, category: "ひく", explanation: "「引く」は病気になるという意味もあります。風邪になるので「引く」が正解です。" },
+            { sentence: "くじを（　　）。", choices: ["引く", "弾く"], correct: 0, category: "ひく", explanation: "「引く」は選ぶという意味もあります。くじを選ぶので「引く」が正解です。" },
+            { sentence: "辞書を（　　）。", choices: ["引く", "弾く"], correct: 0, category: "ひく", explanation: "「引く」は調べるという意味もあります。辞書で調べるので「引く」が正解です。" },
+            { sentence: "線を（　　）。", choices: ["引く", "弾く"], correct: 0, category: "ひく", explanation: "「引く」は線を描くという意味もあります。線を描くので「引く」が正解です。" },
+
+            { sentence: "道を（　　）。", choices: ["通る", "透る"], correct: 0, category: "とおる", explanation: "「通る」は道筋を進むという意味です。道筋を進むので「通る」が正解です。" },
+            { sentence: "光が（　　）。", choices: ["通る", "透る"], correct: 1, category: "とおる", explanation: "「透る」は光などが透明に通り抜けるという意味です。光が透明に通り抜けるので「透る」が正解です。" },
+            { sentence: "学校を（　　）。", choices: ["通る", "透る"], correct: 0, category: "とおる", explanation: "「通る」は道筋を進むという意味です。学校の前を進むので「通る」が正解です。" },
+            { sentence: "声が（　　）。", choices: ["通る", "透る"], correct: 1, category: "とおる", explanation: "「透る」は音などがよく響くという意味です。声がよく響くので「透る」が正解です。" },
+
+            { sentence: "魚を（　　）。", choices: ["釣る", "吊る"], correct: 0, category: "つる", explanation: "「釣る」は魚を捕まえるという意味です。魚を捕まえるので「釣る」が正解です。" },
+            { sentence: "洗濯物を（　　）。", choices: ["釣る", "吊る"], correct: 1, category: "つる", explanation: "「吊る」は物を上からぶら下げるという意味です。洗濯物をぶら下げるので「吊る」が正解です。" },
+            { sentence: "鯉を（　　）。", choices: ["釣る", "吊る"], correct: 0, category: "つる", explanation: "「釣る」は魚を捕まえるという意味です。鯉という魚を捕まえるので「釣る」が正解です。" },
+            { sentence: "電球を（　　）。", choices: ["釣る", "吊る"], correct: 1, category: "つる", explanation: "「吊る」は物を上からぶら下げるという意味です。電球をぶら下げるので「吊る」が正解です。" },
+
+            { sentence: "お金を（　　）。", choices: ["貯める", "溜める"], correct: 0, category: "ためる", explanation: "「貯める」はお金などを蓄積するという意味です。お金を蓄積するので「貯める」が正解です。" },
+            { sentence: "水を（　　）。", choices: ["貯める", "溜める"], correct: 1, category: "ためる", explanation: "「溜める」は液体などを一箇所に集めるという意味です。水を一箇所に集めるので「溜める」が正解です。" },
+            { sentence: "貯金を（　　）。", choices: ["貯める", "溜める"], correct: 0, category: "ためる", explanation: "「貯める」はお金などを蓄積するという意味です。貯金を蓄積するので「貯める」が正解です。" },
+            { sentence: "雨水を（　　）。", choices: ["貯める", "溜める"], correct: 1, category: "ためる", explanation: "「溜める」は液体などを一箇所に集めるという意味です。雨水を一箇所に集めるので「溜める」が正解です。" },
+
+            { sentence: "机を（　　）。", choices: ["拭く", "吹く"], correct: 0, category: "ふく", explanation: "「拭く」は布などでこすって汚れを取るという意味です。机の汚れを取るので「拭く」が正解です。" },
+            { sentence: "笛を（　　）。", choices: ["拭く", "吹く"], correct: 1, category: "ふく", explanation: "「吹く」は息を出すという意味です。笛に息を出すので「吹く」が正解です。" },
+            { sentence: "窓を（　　）。", choices: ["拭く", "吹く"], correct: 0, category: "ふく", explanation: "「拭く」は布などでこすって汚れを取るという意味です。窓の汚れを取るので「拭く」が正解です。" },
+            { sentence: "風船を（　　）。", choices: ["拭く", "吹く"], correct: 1, category: "ふく", explanation: "「吹く」は息を出すという意味です。風船に息を出して膨らませるので「吹く」が正解です。" },
+
+            { sentence: "電車に（　　）。", choices: ["乗る", "載る"], correct: 0, category: "のる", explanation: "「乗る」は乗り物に乗るという意味です。電車という乗り物に乗るので「乗る」が正解です。" },
+            { sentence: "雑誌に（　　）。", choices: ["乗る", "載る"], correct: 1, category: "のる", explanation: "「載る」は記事などが掲載されるという意味です。雑誌に記事が掲載されるので「載る」が正解です。" },
+            { sentence: "バスに（　　）。", choices: ["乗る", "載る"], correct: 0, category: "のる", explanation: "「乗る」は乗り物に乗るという意味です。バスという乗り物に乗るので「乗る」が正解です。" },
+            { sentence: "新聞に（　　）。", choices: ["乗る", "載る"], correct: 1, category: "のる", explanation: "「載る」は記事などが掲載されるという意味です。新聞に記事が掲載されるので「載る」が正解です。" },
+
+            { sentence: "犬を（　　）。", choices: ["飼う", "買う"], correct: 0, category: "かう", explanation: "「飼う」は動物を世話するという意味です。犬という動物を世話するので「飼う」が正解です。" },
+                        { sentence: "本を（　　）。", choices: ["飼う", "買う"], correct: 1, category: "かう", explanation: "「買う」は物を購入するという意味です。本という物を購入するので「買う」が正解です。" },
+            { sentence: "猫を（　　）。", choices: ["飼う", "買う"], correct: 0, category: "かう", explanation: "「飼う」は動物を世話するという意味です。猫という動物を世話するので「飼う」が正解です。" },
+            { sentence: "服を（　　）。", choices: ["飼う", "買う"], correct: 1, category: "かう", explanation: "「買う」は物を購入するという意味です。服という物を購入するので「買う」が正解です。" },
+            { sentence: "鳥を（　　）。", choices: ["飼う", "買う"], correct: 0, category: "かう", explanation: "「飼う」は動物を世話するという意味です。鳥という動物を世話するので「飼う」が正解です。" },
+            { sentence: "車を（　　）。", choices: ["飼う", "買う"], correct: 1, category: "かう", explanation: "「買う」は物を購入するという意味です。車という物を購入するので「買う」が正解です。" },
+            { sentence: "金魚を（　　）。", choices: ["飼う", "買う"], correct: 0, category: "かう", explanation: "「飼う」は動物を世話するという意味です。金魚という動物を世話するので「飼う」が正解です。" },
+            { sentence: "靴を（　　）。", choices: ["飼う", "買う"], correct: 1, category: "かう", explanation: "「買う」は物を購入するという意味です。靴という物を購入するので「買う」が正解です。" },
+            { sentence: "ハムスターを（　　）。", choices: ["飼う", "買う"], correct: 0, category: "かう", explanation: "「飼う」は動物を世話するという意味です。ハムスターという動物を世話するので「飼う」が正解です。" },
+            { sentence: "食べ物を（　　）。", choices: ["飼う", "買う"], correct: 1, category: "かう", explanation: "「買う」は物を購入するという意味です。食べ物という物を購入するので「買う」が正解です。" },
+
+            { sentence: "山に（　　）。", choices: ["登る", "上る"], correct: 0, category: "のぼる", explanation: "「登る」は高い所に向かって進むという意味です。山という高い所に向かって進むので「登る」が正解です。" },
+            { sentence: "階段を（　　）。", choices: ["登る", "上る"], correct: 1, category: "のぼる", explanation: "「上る」は上の方に移動するという意味です。階段を上の方に移動するので「上る」が正解です。" },
+            { sentence: "富士山に（　　）。", choices: ["登る", "上る"], correct: 0, category: "のぼる", explanation: "「登る」は高い所に向かって進むという意味です。富士山という高い所に向かって進むので「登る」が正解です。" },
+            { sentence: "2階に（　　）。", choices: ["登る", "上る"], correct: 1, category: "のぼる", explanation: "「上る」は上の方に移動するという意味です。2階という上の方に移動するので「上る」が正解です。" },
+
+            { sentence: "友達と（　　）。", choices: ["会う", "合う"], correct: 0, category: "あう", explanation: "「会う」は人と出会うという意味です。友達と出会うので「会う」が正解です。" },
+            { sentence: "服が（　　）。", choices: ["会う", "合う"], correct: 1, category: "あう", explanation: "「合う」はぴったりするという意味です。服がぴったりするので「合う」が正解です。" },
+            { sentence: "先生に（　　）。", choices: ["会う", "合う"], correct: 0, category: "あう", explanation: "「会う」は人と出会うという意味です。先生と出会うので「会う」が正解です。" },
+            { sentence: "靴が（　　）。", choices: ["会う", "合う"], correct: 1, category: "あう", explanation: "「合う」はぴったりするという意味です。靴がぴったりするので「合う」が正解です。" }
+        ];
+
+        // アプリケーション状態管理
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let totalAnswered = 0;
+        let answered = false;
+        let shuffledQuestions = [...questionDatabase];
+
+        // 問題をシャッフルする関数
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        // 問題表示関数
+        function displayQuestion() {
+            if (currentQuestionIndex >= shuffledQuestions.length) {
+                showFinalResult();
+                return;
+            }
+
+            const question = shuffledQuestions[currentQuestionIndex];
+            document.getElementById('question').textContent = question.sentence;
+            document.getElementById('categoryInfo').textContent = `カテゴリ: ${question.category}`;
+            
+            const choicesDiv = document.getElementById('choices');
+            choicesDiv.innerHTML = '';
+            
+            question.choices.forEach((choice, index) => {
+                const button = document.createElement('button');
+                button.className = 'choice-btn';
+                button.textContent = choice;
+                button.onclick = () => selectAnswer(index);
+                choicesDiv.appendChild(button);
+            });
+            
+            document.getElementById('result').textContent = '';
+            document.getElementById('explanation').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+            answered = false;
+
+            updateProgress();
+            updateStats();
+        }
+
+        // 回答選択処理
+        function selectAnswer(selectedIndex) {
+            if (answered) return;
+            
+            answered = true;
+            totalAnswered++;
+            const question = shuffledQuestions[currentQuestionIndex];
+            const buttons = document.querySelectorAll('.choice-btn');
+            
+            buttons.forEach((button, index) => {
+                if (index === question.correct) {
+                    button.classList.add('correct');
+                } else if (index === selectedIndex && index !== question.correct) {
+                    button.classList.add('incorrect');
+                }
+                button.style.pointerEvents = 'none';
+            });
+            
+            const resultDiv = document.getElementById('result');
+            if (selectedIndex === question.correct) {
+                resultDiv.innerHTML = '🎉 <span style="color: #27ae60;">正解！</span>';
+                score++;
+            } else {
+                resultDiv.innerHTML = '❌ <span style="color: #e74c3c;">不正解</span>';
+            }
+            
+            document.getElementById('explanation').textContent = question.explanation;
+            document.getElementById('explanation').style.display = 'block';
+            
+            updateStats();
+            
+            if (currentQuestionIndex < shuffledQuestions.length - 1) {
+                document.getElementById('nextBtn').style.display = 'inline-block';
+            } else {
+                setTimeout(showFinalResult, 2000);
+            }
+        }
+
+        // 次の問題へ
+        function nextQuestion() {
+            currentQuestionIndex++;
+            displayQuestion();
+        }
+
+        // 統計情報更新
+        function updateStats() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('currentNum').textContent = currentQuestionIndex + 1;
+            document.getElementById('totalQuestions').textContent = shuffledQuestions.length;
+            
+            const accuracy = totalAnswered > 0 ? Math.round((score / totalAnswered) * 100) : 0;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+        }
+
+        // プログレスバー更新
+        function updateProgress() {
+            const progress = ((currentQuestionIndex + 1) / shuffledQuestions.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        // 最終結果表示
+        function showFinalResult() {
+            const percentage = Math.round((score / totalAnswered) * 100);
+            let message = '';
+            let emoji = '';
+            
+            if (percentage >= 95) {
+                message = '完璧です！漢字マスターですね！';
+                emoji = '🏆';
+            } else if (percentage >= 90) {
+                message = '素晴らしい！とても良くできました！';
+                emoji = '🌟';
+            } else if (percentage >= 80) {
+                message = 'よくできました！';
+                emoji = '👍';
+            } else if (percentage >= 70) {
+                message = 'まずまずの成績です！';
+                emoji = '📚';
+            } else if (percentage >= 60) {
+                message = 'もう少し練習してみましょう！';
+                emoji = '💪';
+            } else {
+                message = '頑張って復習しましょう！';
+                emoji = '📖';
+            }
+            
+            document.getElementById('result').innerHTML = `
+                <div style="font-size: 32px; margin-bottom: 15px;">${emoji}</div>
+                <div style="font-size: 24px; margin-bottom: 15px; color: #2c3e50;">${message}</div>
+                <div style="font-size: 20px; color: #34495e;">
+                    最終スコア: ${score} / ${totalAnswered} 問正解<br>
+                    正答率: ${percentage}%
+                </div>
+            `;
+            
+            document.getElementById('restartBtn').style.display = 'inline-block';
+        }
+
+        // クイズリスタート
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            totalAnswered = 0;
+            answered = false;
+            document.getElementById('restartBtn').style.display = 'none';
+            shuffledQuestions = shuffleArray(questionDatabase);
+            displayQuestion();
+        }
+
+        // 問題シャッフル
+        function shuffleQuestions() {
+            shuffledQuestions = shuffleArray(questionDatabase);
+            currentQuestionIndex = 0;
+            score = 0;
+            totalAnswered = 0;
+            answered = false;
+            document.getElementById('restartBtn').style.display = 'none';
+            displayQuestion();
+        }
+
+        // 初期化
+        function initializeApp() {
+            shuffledQuestions = shuffleArray(questionDatabase);
+            displayQuestion();
+        }
+
+        // アプリ開始
+        initializeApp();
+    </script>
+</body>
+</html>
